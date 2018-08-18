@@ -90,7 +90,7 @@ class VoteResultFunctionManager extends DefaultPluginManager {
       ->condition('type', $vote_type)
       ->sort('type')
       ->execute();
-    $vote_storage = \Drupal::entityManager()->getStorage('vote');
+    $vote_storage = \Drupal::entityTypeManager()->getStorage('vote');
     $votes = [];
     $vote_type = '';
     if (!empty($vote_ids)) {

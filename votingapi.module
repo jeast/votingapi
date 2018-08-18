@@ -51,7 +51,7 @@ function votingapi_entity_delete(EntityInterface $entity) {
   }
   // Delete all votes and result entries for the deleted entities.
   if (!($entity instanceof VoteInterface)) {
-    $vote_storage = \Drupal::entityManager()->getStorage('vote');
+    $vote_storage = \Drupal::entityTypeManager()->getStorage('vote');
     $vote_storage->deleteVotesForDeletedEntity(
       $entity->getEntityTypeId(), $entity->id()
     );
@@ -68,7 +68,7 @@ function votingapi_cron() {
   if (Drupal::config('votingapi.settings')
     ->get('calculation_schedule') == 'cron'
   ) {
-    $vote_storage = \Drupal::entityManager()->getStorage('vote');
+    $vote_storage = \Drupal::entityTypeManager()->getStorage('vote');
     $results = $vote_storage->getVotesSinceMoment();
     $manager = Drupal::service('plugin.manager.votingapi.resultfunction');
     foreach ($results as $entity) {
