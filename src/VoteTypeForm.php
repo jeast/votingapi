@@ -140,10 +140,10 @@ class VoteTypeForm extends EntityForm {
     $t_args = ['%name' => $type->label()];
 
     if ($status == SAVED_UPDATED) {
-      drupal_set_message($this->t('The vote type %name has been updated.', $t_args));
+      $this->messenger()->addMessage($this->t('The vote type %name has been updated.', $t_args));
     }
     elseif ($status == SAVED_NEW) {
-      drupal_set_message($this->t('The vote type %name has been added.', $t_args));
+      $this->messenger()->addMessage($this->t('The vote type %name has been added.', $t_args));
       $context = array_merge($t_args, ['link' => $type->link($this->t('View'), 'collection')]);
       $this->logger('vote')->notice('Added vote type %name.', $context);
     }
