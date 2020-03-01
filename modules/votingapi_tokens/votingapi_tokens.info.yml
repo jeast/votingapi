@@ -1,0 +1,7 @@
+name: VotingAPI Tokens
+description: 'Token support for VotingAPI'
+type: module
+core: 8.x
+dependencies:
+- votingapi:votingapi
+- token:token
