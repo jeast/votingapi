@@ -6,6 +6,8 @@
  *  VotingAPI data entirely.
  */
 
+use Drupal\votingapi\Entity\Vote;
+
 /**
  * Implements of hook_drush_help().
  */
@@ -32,9 +34,8 @@ function votingapi_drush_command() {
       'entity_type' => 'The type of entity to generate votes for.',
       'vote_type' => 'The type of votes to generate, defaults to \'percent\'.',
     ],
-    'drupal dependencies' => ['devel_generate'],
     'options' => [
-      'kill' => 'Specify \'kill\' to delete all existing votes before generating new ones.',
+      'kill_votes' => 'Specify \'kill_votes\' to delete all existing votes before generating new ones.',
       'age' => 'The maximum age, in seconds, of each vote.',
       'node_types' => 'A comma delimited list of node types to generate votes for, if the entity type is \'node\'.',
     ],
@@ -66,9 +67,9 @@ function votingapi_drush_command() {
  */
 function drush_votingapi_generate_votes($entity_type = 'node', $vote_type = 'percent') {
   $options = [
-    'kill' => drush_get_option('kill'),
+    'kill_votes' => drush_get_option('kill_votes'),
     'age' => drush_get_option('age'),
-    'types' => drush_get_option('types'),
+    'node_types' => drush_get_option('node_types'),
   ];
 
   votingapi_generate_votes($entity_type, $vote_type, $options);
@@ -80,77 +81,49 @@ function drush_votingapi_generate_votes($entity_type = 'node', $vote_type = 'per
  * Utility function to generate votes.
  */
 function votingapi_generate_votes($entity_type = 'node', $vote_type = 'percent', $options = []) {
-  module_load_include('inc', 'devel_generate');
   $options += [
     'age' => 36000,
-    'types' => [],
-    'kill' => FALSE,
+    'node_types' => [],
+    'kill_votes' => FALSE,
   ];
-
   if (!empty($options['kill_votes'])) {
-    db_truncate('votingapi_vote');
-    db_truncate('votingapi_cache');
+    $cache = \Drupal::database()->delete('votingapi_result');
+    $votes = \Drupal::database()->delete('votingapi_vote');
+    $cache->condition('entity_type', $entity_type);
+    $votes->condition('entity_type', $entity_type);
+    $cache->execute();
+    $votes->execute();
   }
-
-  if (($schema = drupal_get_schema($entity_type)) && ($entity_id_column = array_shift($schema['primary key']))) {
-    // Oh look we found a schema yay.
-  }
-  else {
-    $entity_type = 'node';
-    $entity_id_column = 'nid';
-  }
-  $uids = devel_get_users();
-
-  $query = db_select($entity_type, 'e')->fields('e', [$entity_id_column]);
+  $uids = \Drupal::entityQuery('user')
+    ->condition('status', 1)
+    ->execute();
+  $query = \Drupal::database()->select($entity_type, 'e')
+    ->fields('e', ['nid']);
   if ($entity_type == 'node' && !empty($options['types'])) {
     $query->condition('e.type', $options['types'], 'IN');
   }
   $results = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
-
   foreach ($results as $entity) {
-    _votingapi_cast_votes($entity_type, $entity[$entity_id_column], $options['age'], $uids, $vote_type);
+    _votingapi_cast_votes($entity_type, $entity['nid'], $options['age'], $uids, $vote_type);
   }
 }
 
 /**
  * Utility function to generate votes on a node by a set of users.
  */
-function _votingapi_cast_votes($etype, $eid, $timestamp = 0, $uids = [], $style = 'percent') {
-  $votes = [];
-  static $tags;
-  if (!isset($tags)) {
-    $tags = explode(' ', devel_create_greeking(30));
-  }
-  $request_time = \Drupal::time()->getRequestTime();
+function _votingapi_cast_votes($eType, $eId, $timestamp = 0, $uids = [], $style = 'percent') {
   foreach ($uids as $uid) {
-    switch ($style) {
-      case 'percent':
-        $votes[] = [
-          'uid' => $uid,
-          'entity_type' => $etype,
-          'entity_id' => $eid,
-          'value_type' => 'percent',
-          'timestamp' => $request_time - mt_rand(0, $timestamp),
-          'value' => mt_rand(1, 5) * 20,
-          'tag' => $tags[mt_rand(0, 30)],
-        ];
-        break;
-
-      case 'points':
-        if (rand(0, 3)) {
-          $votes[] = [
-            'uid' => $uid,
-            'entity_type' => $etype,
-            'entity_id' => $eid,
-            'value_type' => 'points',
-            'timestamp' => $request_time - mt_rand(0, $timestamp),
-            'value' => rand(0, 1) ? 1 : -1,
-          ];
-        }
-        break;
-    }
+    $request_time = \Drupal::time()->getRequestTime();
+    $value = $style === 'points' ? rand(0, 1) ? 1 : -1 : mt_rand(1, 5) * 20;
+    $vote = Vote::create(['type' => 'vote']);
+    $vote->setVotedEntityId($eId);
+    $vote->setVotedEntityType($eType);
+    $vote->setOwnerId($uid);
+    $vote->setCreatedTime($request_time - mt_rand(0, $timestamp));
+    $vote->setValueType($style);
+    $vote->setValue($value);
+    $vote->save();
   }
-  votingapi_set_votes($votes, []);
 }
 
 /**
