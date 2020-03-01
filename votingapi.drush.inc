@@ -74,7 +74,7 @@ function drush_votingapi_generate_votes($entity_type = 'node', $vote_type = 'per
 
   votingapi_generate_votes($entity_type, $vote_type, $options);
 
-  drush_log(t('Generating @vtype votes for @etype entities.', ['@vtype' => $vote_type, '@etype' => $entity_type]), 'success');
+  drush_log(dt('Generating @vtype votes for @etype entities.', ['@vtype' => $vote_type, '@etype' => $entity_type]), 'success');
 }
 
 /**
@@ -129,23 +129,27 @@ function _votingapi_cast_votes($eType, $eId, $timestamp = 0, $uids = [], $style 
 /**
  * Command callback. Recalculate voting results.
  */
-function drush_votingapi_recalculate($entity_type = 'node', $entity_id = NULL) {
+function drush_votingapi_recalculate($entity_type = 'node', $entity_id = NULL, $vote_type = 'vote') {
   // Prep some starter query objects.
-  $data = [];
   if (empty($entity_id)) {
-    $votes = db_select('votingapi_vote', 'vv')
+    $votes = \Drupal::database()->select('votingapi_vote', 'vv')
       ->fields('vv', ['entity_type', 'entity_id'])
-      ->condition('entity_type', $entity_type, '=')->distinct(TRUE)
+      ->condition('entity_type', $entity_type, '=')
+      ->distinct(TRUE)
       ->execute()->fetchAll(PDO::FETCH_ASSOC);
-    $message = t('Rebuilt voting results for @type votes.', ['@type' => $entity_type]);
+    $message = dt('Rebuilt voting results for @type votes.', ['@type' => $entity_type]);
   }
   else {
     $votes[] = ['entity_type' => $entity_type, 'entity_id' => $entity_id];
-    $message = t('Rebuilt all voting results.');
+    $message = dt('Rebuilt voting results for @type id: @entity_id.', [
+      '@type' => $entity_type,
+      '@entity_id' => $entity_id,
+    ]);
   }
 
   foreach ($votes as $vote) {
-    votingapi_recalculate_results($vote['entity_type'], $vote['entity_id'], TRUE);
+    $manager = Drupal::service('plugin.manager.votingapi.resultfunction');
+    $manager->recalculateResults($vote['entity_type'], $vote['entity_id'], $vote_type);
   }
 
   drush_log($message, 'success');
@@ -156,8 +160,8 @@ function drush_votingapi_recalculate($entity_type = 'node', $entity_id = NULL) {
  */
 function drush_votingapi_flush($entity_type = NULL, $entity_id = NULL) {
   if (drush_confirm(dt("Delete @type voting data?", ['@type' => empty($entity_type) ? dt('all') : $entity_type]))) {
-    $cache = db_delete('votingapi_cache');
-    $votes = db_delete('votingapi_vote');
+    $cache = \Drupal::database()->delete('votingapi_result');
+    $votes = \Drupal::database()->delete('votingapi_vote');
 
     if (!empty($entity_type)) {
       $cache->condition('entity_type', $entity_type);
@@ -171,6 +175,6 @@ function drush_votingapi_flush($entity_type = NULL, $entity_id = NULL) {
     $cache->execute();
     $votes->execute();
 
-    drush_log(t('Flushed vote data for @type entities.', ['@type' => empty($entity_type) ? t('all') : $entity_type]), 'success');
+    drush_log(dt('Flushed vote data for @type entities.', ['@type' => empty($entity_type) ? t('all') : $entity_type]), 'success');
   }
 }
