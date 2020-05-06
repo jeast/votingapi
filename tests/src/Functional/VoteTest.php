@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\votingapi\Tests;
+namespace Drupal\Tests\votingapi\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 
@@ -84,8 +84,7 @@ class VoteTest extends BrowserTestBase {
    * Test vote results.
    */
   public function testVoteResults() {
-    $vote_storage = $this->
-    container->get('entity_type.manager')->getStorage('vote');
+    $vote_storage = $this->container->get('entity_type.manager')->getStorage('vote');
     $node = $this->drupalCreateNode();
     $user = $this->drupalCreateUser();
     $manager = $this->container->get('plugin.manager.votingapi.resultfunction');

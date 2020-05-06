@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\votingapi\Tests;
+namespace Drupal\Tests\votingapi\Functional;
 
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
