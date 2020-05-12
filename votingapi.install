@@ -6,13 +6,6 @@
  */
 
 use Drupal\Core\Entity\EntityStorageException;
-/**
- * Implements hook_uninstall().
- */
-function votingapi_uninstall() {
-  db_query("DELETE FROM {config} WHERE name = 'votingapi.settings'");
-  drupal_flush_all_caches();
-}
 
 /**
  * Implements hook_update_N().
