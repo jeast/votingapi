@@ -14,6 +14,9 @@ use Drupal\Core\Render\BubbleableMetadata;
  */
 function votingapi_tokens_token_info() {
   $entity_types = _votingapi_tokens_get_entity_types();
+
+  $types = [];
+  $tokens = [];
   foreach ($entity_types as $entity_type) {
     $types['votingapi_' . $entity_type . '_token'] = [
       'name' => t('VotingAPI tokens'),
@@ -42,6 +45,7 @@ function votingapi_tokens_token_info() {
       'description' => t('Worst Vote cast.'),
     ];
   }
+
   return [
     'types' => $types,
     'tokens' => $tokens,
@@ -65,12 +69,15 @@ function votingapi_tokens_tokens($type, $tokens, array $data, array $options, Bu
           case 'vote_count':
             $replacements[$original] = $votes[$vote_type]['vote_count'];
             break;
+
           case 'vote_average':
             $replacements[$original] = $votes[$vote_type]['vote_average'];
             break;
+
           case 'best_vote':
             $replacements[$original] = max(_votingapi_tokens_get_votes_per_entity($entity_type, $data[$entity_type]->id(), $vote_type));
             break;
+
           case 'worst_vote':
             $replacements[$original] = min(_votingapi_tokens_get_votes_per_entity($entity_type, $data[$entity_type]->id(), $vote_type));
             break;
@@ -78,6 +85,7 @@ function votingapi_tokens_tokens($type, $tokens, array $data, array $options, Bu
       }
     }
   }
+
   return $replacements;
 }
 
@@ -91,7 +99,12 @@ function _votingapi_tokens_get_entity_types() {
   $entity_list = [];
   $database = \Drupal::database();
   $query = $database->query("SELECT DISTINCT entity_type FROM {votingapi_vote}");
-  $entity_list = array_map(function ($v) { return $v->entity_type; }, $query->fetchAll());
+  $entity_list = array_map(
+    function ($v) {
+      return $v->entity_type;
+    },
+    $query->fetchAll()
+  );
   return $entity_list;
 }
 
