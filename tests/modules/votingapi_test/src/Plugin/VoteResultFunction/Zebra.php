@@ -5,6 +5,8 @@ namespace Drupal\votingapi_test\Plugin\VoteResultFunction;
 use Drupal\votingapi\VoteResultFunctionBase;
 
 /**
+ * A test plugin for the Voting API module.
+ *
  * @VoteResult(
  *   id = "zebra",
  *   label = @Translation("Zebra"),
