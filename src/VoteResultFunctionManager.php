@@ -3,6 +3,7 @@
 namespace Drupal\votingapi;
 
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
@@ -20,6 +21,13 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 class VoteResultFunctionManager extends DefaultPluginManager {
 
   /**
+   * The database connection.
+   *
+   * @var Drupal\Core\Database\Connection
+   */
+  protected $database;
+
+  /**
    * Constructs a new VoteResultFunctionManager.
    *
    * @param \Traversable $namespaces
@@ -29,11 +37,14 @@ class VoteResultFunctionManager extends DefaultPluginManager {
    *   Cache backend instance to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
+  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, Connection $database) {
     parent::__construct('Plugin/VoteResultFunction', $namespaces, $module_handler, 'Drupal\votingapi\VoteResultFunctionInterface', 'Drupal\votingapi\Annotation\VoteResultFunction');
     $this->alterInfo('vote_result_info');
     $this->setCacheBackend($cache_backend, 'vote_result_plugins');
+    $this->database = $database;
   }
 
   /**
@@ -45,12 +56,12 @@ class VoteResultFunctionManager extends DefaultPluginManager {
    *   The ID of the entity.
    *
    * @return array
-   *   An nested array
+   *   A nested array
    */
   public function getResults($entity_type_id, $entity_id) {
     $results = [];
 
-    $result = db_select('votingapi_result', 'v')
+    $result = $this->database->select('votingapi_result', 'v')
       ->fields('v', ['type', 'function', 'value'])
       ->condition('entity_type', $entity_type_id)
       ->condition('entity_id', $entity_id)
@@ -78,7 +89,7 @@ class VoteResultFunctionManager extends DefaultPluginManager {
    * @param string $vote_type
    */
   public function recalculateResults($entity_type_id, $entity_id, $vote_type) {
-    db_delete('votingapi_result')
+    $this->database->delete('votingapi_result')
       ->condition('entity_type', $entity_type_id)
       ->condition('entity_id', $entity_id)
       ->condition('type', $vote_type)
@@ -127,7 +138,7 @@ class VoteResultFunctionManager extends DefaultPluginManager {
 
     foreach ($this->getDefinitions() as $plugin_id => $definition) {
       $plugin = $this->createInstance($plugin_id);
-      db_insert('votingapi_result')->fields([
+      $this->database->insert('votingapi_result')->fields([
         'entity_id' => $entity_id,
         'entity_type' => $entity_type_id,
         'type' => $vote_type,

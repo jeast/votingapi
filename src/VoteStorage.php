@@ -78,7 +78,7 @@ class VoteStorage extends SqlContentEntityStorage implements VoteStorageInterfac
     if (!empty($votes)) {
       entity_delete_multiple('vote', $votes);
     }
-    db_delete('votingapi_result')
+    $this->database->delete('votingapi_result')
       ->condition('entity_type', $entity_type_id)
       ->condition('entity_id', $entity_id)
       ->execute();
