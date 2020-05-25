@@ -81,6 +81,7 @@ class VoteTypeForm extends EntityForm {
       '#description' => $this->t('A unique machine-readable name for this vote type. It must only contain lowercase letters, numbers, and underscores.', [
         '%vote-add' => $this->t('Add vote type'),
       ]),
+      '#disabled' => !$type->isNew(),
     ];
 
     $form['value_type'] = [
