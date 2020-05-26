@@ -118,10 +118,9 @@ class VoteTest extends BrowserTestBase {
     $this->assertNotEmpty(empty($results['test']['vote_count']), 'Result removed via alter hook was not calculated.');
 
     // Contrib modules can add new result types.
-    // @todo This isn't working, as $results are pulled directly from the
-    // database via the getResults() method.
-    // $this->assertTrue(isset($results['vote']['zebra']), 'New result was calculated.');
-    // $this->assertEquals($results['vote']['zebra'], 10101, 'New result is correct.');.
+    $this->assertTrue(isset($results['vote']['zebra']), 'New result was calculated.');
+    $this->assertEquals($results['vote']['zebra'], 10101, 'New result is correct.');
+
     // Deleting entity removes results.
     $storage_handler = \Drupal::entityTypeManager()->getStorage('node');
     $entities = $storage_handler->loadMultiple([$node->id()]);

@@ -7,7 +7,7 @@ use Drupal\votingapi\VoteResultFunctionBase;
 /**
  * A test plugin for the Voting API module.
  *
- * @VoteResult(
+ * @VoteResultFunction(
  *   id = "zebra",
  *   label = @Translation("Zebra"),
  *   description = @Translation("A vote test plugin.")
