@@ -87,6 +87,7 @@ class VoteResultFunctionManager extends DefaultPluginManager {
    * @param string $entity_id
    *   The key ID of the content being rated.
    * @param string $vote_type
+   *   The type of vote cast.
    */
   public function recalculateResults($entity_type_id, $entity_id, $vote_type) {
     $this->database->delete('votingapi_result')
@@ -124,21 +125,20 @@ class VoteResultFunctionManager extends DefaultPluginManager {
   }
 
   /**
-   * Perform the result calculations available on a set of votes and store the
-   * results.
+   * Perform the result calculations on a set of votes and store the results.
    *
-   * @param VoteInterface[] $votes
+   * @param array $votes
    *   The set of votes to perform the calculations on. All votes in the set are
    *   expected to be the same vote type and for the same entity.
    */
-  protected function performAndStore($votes) {
+  protected function performAndStore(array $votes) {
     $entity_type_id = $votes[0]->getVotedEntityType();
     $entity_id = $votes[0]->getVotedEntityId();
     $vote_type = $votes[0]->bundle();
 
     foreach ($this->getDefinitions() as $plugin_id => $definition) {
       $plugin = $this->createInstance($plugin_id);
-      $this->database->insert('votingapi_result')->fields([
+      $vote_results[] = [
         'entity_id' => $entity_id,
         'entity_type' => $entity_type_id,
         'type' => $vote_type,
@@ -146,7 +146,15 @@ class VoteResultFunctionManager extends DefaultPluginManager {
         'value' => $plugin->calculateResult($votes),
         'value_type' => $votes[0]->get('value_type')->value,
         'timestamp' => \Drupal::time()->getRequestTime(),
-      ])->execute();
+      ];
+    }
+    // Give other modules a chance to act on the results of vote calculations.
+    $this->moduleHandler->alter('votingapi_results', $vote_results, $entity_type_id, $entity_id);
+
+    foreach ($vote_results as $id => $vote_result) {
+      if (!empty($vote_result)) {
+        $this->database->insert('votingapi_result')->fields($vote_result)->execute();
+      }
     }
   }
 

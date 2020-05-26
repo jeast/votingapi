@@ -110,6 +110,10 @@ class VoteTest extends BrowserTestBase {
     $this->assertNotEmpty(isset($results['vote']['vote_average']), 'Average was calculated.');
     $this->assertEquals($results['vote']['vote_average'], 30, 'Average is correct.');
 
+    // Check the result of hook_vote_result_alter.
+    $this->assertNotEmpty(isset($results['vote']['ultimate_question']), 'hook_vote_result_alter triggered.');
+    $this->assertEquals($results['vote']['ultimate_question'], 42, 'The answer to the ultimate question is 42.');
+
     // When you remove a result type via the hook, it is not longer available.
     $this->assertNotEmpty(empty($results['test']['vote_count']), 'Result removed via alter hook was not calculated.');
 
