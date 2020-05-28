@@ -2,10 +2,13 @@
 
 namespace Drupal\votingapi;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\votingapi\Annotation\VoteResultFunction;
 
 /**
  * Manages vote result plugins.
@@ -23,9 +26,23 @@ class VoteResultFunctionManager extends DefaultPluginManager {
   /**
    * The database connection.
    *
-   * @var Drupal\Core\Database\Connection
+   * @var \Drupal\Core\Database\Connection
    */
   protected $database;
+
+  /**
+   * The entity_type.manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The datetime.time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $datetime;
 
   /**
    * Constructs a new VoteResultFunctionManager.
@@ -39,12 +56,18 @@ class VoteResultFunctionManager extends DefaultPluginManager {
    *   The module handler.
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity_type.manager service.
+   * @param \Drupal\Component\Datetime\TimeInterface $datetime
+   *   The datetime.time service.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, Connection $database) {
-    parent::__construct('Plugin/VoteResultFunction', $namespaces, $module_handler, 'Drupal\votingapi\VoteResultFunctionInterface', 'Drupal\votingapi\Annotation\VoteResultFunction');
+  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, Connection $database, EntityTypeManagerInterface $entity_type_manager, TimeInterface $datetime) {
+    parent::__construct('Plugin/VoteResultFunction', $namespaces, $module_handler, VoteResultFunctionInterface::class, VoteResultFunction::class);
     $this->alterInfo('vote_result_info');
     $this->setCacheBackend($cache_backend, 'vote_result_plugins');
     $this->database = $database;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->datetime = $datetime;
   }
 
   /**
@@ -96,16 +119,17 @@ class VoteResultFunctionManager extends DefaultPluginManager {
       ->condition('type', $vote_type)
       ->execute();
 
-    $vote_ids = \Drupal::entityQuery('vote')
+    $vote_storage = $this->entityTypeManager->getStorage('vote');
+    $vote_ids = $vote_storage->getQuery()
       ->condition('entity_type', $entity_type_id)
       ->condition('entity_id', $entity_id)
       ->condition('type', $vote_type)
       ->sort('type')
       ->execute();
-    $vote_storage = \Drupal::entityTypeManager()->getStorage('vote');
-    $votes = [];
-    $vote_type = '';
+
     if (!empty($vote_ids)) {
+      $votes = [];
+      $vote_type = '';
       foreach ($vote_ids as $vote_id) {
         $vote = $vote_storage->load($vote_id);
 
@@ -145,7 +169,7 @@ class VoteResultFunctionManager extends DefaultPluginManager {
         'function' => $plugin_id,
         'value' => $plugin->calculateResult($votes),
         'value_type' => $votes[0]->get('value_type')->value,
-        'timestamp' => \Drupal::time()->getRequestTime(),
+        'timestamp' => $this->datetime->getRequestTime(),
       ];
     }
     // Give other modules a chance to act on the results of vote calculations.
