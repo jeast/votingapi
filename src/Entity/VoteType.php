@@ -38,6 +38,12 @@ use Drupal\votingapi\VoteTypeInterface;
  *     "edit-form" = "/admin/structure/vote-types/{vote_type}",
  *     "delete-form" = "/admin/structure/vote-types/{vote_type}/delete",
  *     "collection" = "/admin/structure/vote-types",
+ *   },
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "value_type",
+ *     "description",
  *   }
  * )
  */
