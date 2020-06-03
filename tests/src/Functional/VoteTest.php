@@ -34,7 +34,7 @@ class VoteTest extends BrowserTestBase {
     $query = $vote_query->condition('entity_type', 'node')
       ->condition('entity_id', $node->id());
     $votes = $query->execute();
-    $this->assertEquals(count($votes), 0, 'Vote count for a node is initially zero.');
+    $this->assertCount(0, $votes, 'Vote count for a node is initially zero.');
 
     // Add a vote to a node.
     /** @var \Drupal\votingapi\VoteInterface $vote */
@@ -47,12 +47,12 @@ class VoteTest extends BrowserTestBase {
     ]);
     $vote->save();
     $votes = $query->execute();
-    $this->assertEquals(count($votes), 1, 'After a vote is cast on a node, it can be retrieved.');
+    $this->assertCount(1, $votes, 'After a vote is cast on a node, it can be retrieved.');
     $vote = $vote_storage->load(reset($votes));
     $this->assertNotNull($vote, 'Node vote was loaded.');
-    $this->assertEquals($vote->getOwnerId(), $user->id(), 'Node vote has correct user.');
-    $this->assertEquals($vote->getValue(), -1, 'Node vote has correct value.');
-    $this->assertNotEquals($vote->getSource(), '', 'A vote with no explicit source received the default value.');
+    $this->assertEquals($user->id(), $vote->getOwnerId(), 'Node vote has correct user.');
+    $this->assertEquals(-1, $vote->getValue(), 'Node vote has correct value.');
+    $this->assertNotEquals('', $vote->getSource(), 'A vote with no explicit source received the default value.');
 
     // Add a vote to a user.
     $vote = $vote_storage->create([
@@ -66,18 +66,18 @@ class VoteTest extends BrowserTestBase {
     $query = $vote_query->condition('entity_type', 'user')
       ->condition('entity_id', $user->id());
     $votes = $query->execute();
-    $this->assertEquals(count($votes), 1, 'After a vote is cast on a user, it can be retrieved.');
+    $this->assertCount(1, $votes, 'After a vote is cast on a user, it can be retrieved.');
     $vote = $vote_storage->load(reset($votes));
     $this->assertNotNull($vote, 'User vote was loaded.');
-    $this->assertEquals($vote->getOwnerId(), 0, 'A vote with no explicit user received the default value.');
-    $this->assertEquals($vote->getValue(), 0, 'A vote with no explicit value received the default value.');
+    $this->assertEquals(0, $vote->getOwnerId(), 'A vote with no explicit user received the default value.');
+    $this->assertEquals(0, $vote->getValue(), 'A vote with no explicit value received the default value.');
 
     // Deleting entity deletes votes.
     $storage_handler = \Drupal::entityTypeManager()->getStorage('user');
     $entities = $storage_handler->loadMultiple([$user->id()]);
     $storage_handler->delete($entities);
     $votes = $query->execute();
-    $this->assertEquals(count($votes), 0, 'When an entity is deleted, the votes are also deleted.');
+    $this->assertCount(0, $votes, 'When an entity is deleted, the votes are also deleted.');
   }
 
   /**
@@ -104,29 +104,31 @@ class VoteTest extends BrowserTestBase {
     $results = $manager->getResults('node', $node->id());
 
     // Standard results are available and correct.
-    $this->assertFalse(empty($results['vote']), 'Results for test vote type are available.');
-    $this->assertNotEmpty(isset($results['vote']['vote_sum']), 'Sum was calculated.');
-    $this->assertEquals($results['vote']['vote_sum'], 90, 'Sum is correct.');
-    $this->assertNotEmpty(isset($results['vote']['vote_average']), 'Average was calculated.');
-    $this->assertEquals($results['vote']['vote_average'], 30, 'Average is correct.');
+    $this->assertNotEmpty($results['vote'], 'Results for test vote type are available.');
+    $this->assertArrayHasKey('vote_sum', $results['vote'], 'Sum was calculated.');
+    $this->assertEquals(90, $results['vote']['vote_sum'], 'Sum is correct.');
+    $this->assertArrayHasKey('vote_average', $results['vote'], 'Average was calculated.');
+    $this->assertEquals(30, $results['vote']['vote_average'], 'Average is correct.');
 
     // Check the result of hook_vote_result_alter.
-    $this->assertNotEmpty(isset($results['vote']['ultimate_question']), 'hook_vote_result_alter triggered.');
-    $this->assertEquals($results['vote']['ultimate_question'], 42, 'The answer to the ultimate question is 42.');
+    $this->assertArrayHasKey('ultimate_question', $results['vote'], 'hook_vote_result_alter triggered.');
+    $this->assertEquals(42, $results['vote']['ultimate_question'], 'The answer to the ultimate question is 42.');
 
-    // When you remove a result type via the hook, it is not longer available.
-    $this->assertNotEmpty(empty($results['test']['vote_count']), 'Result removed via alter hook was not calculated.');
+    // When you remove a result type via the hook, it is no longer available.
+    // @todo Replace this with a better assert and fix this so we are actually
+    // testing the hook as described. Right now this doesn't do anything.
+    $this->assertArrayNotHasKey('test', $results, 'Result removed via alter hook was not calculated.');
 
     // Contrib modules can add new result types.
-    $this->assertTrue(isset($results['vote']['zebra']), 'New result was calculated.');
-    $this->assertEquals($results['vote']['zebra'], 10101, 'New result is correct.');
+    $this->assertArrayHasKey('zebra', $results['vote'], 'New result was calculated.');
+    $this->assertEquals(10101, $results['vote']['zebra'], 'New result is correct.');
 
     // Deleting entity removes results.
     $storage_handler = \Drupal::entityTypeManager()->getStorage('node');
     $entities = $storage_handler->loadMultiple([$node->id()]);
     $storage_handler->delete($entities);
     $results = $manager->getResults('node', $node->id());
-    $this->assertNotEmpty(empty($results), 'When an entity is deleted, the voting results are also deleted.');
+    $this->assertEmpty($results, 'When an entity is deleted, the voting results are also deleted.');
   }
 
   /**
@@ -156,15 +158,15 @@ class VoteTest extends BrowserTestBase {
     // Retrieve the votes. For now, just count them.
     $votes_from_source_1 = $vote_storage->getUserVotes(0, 'vote', 'node', 1, 'source_1');
     $votes_from_source_2 = $vote_storage->getUserVotes(0, 'vote', 'node', 1, 'source_2');
-    $this->assertEquals(count($votes_from_source_1), 1, 'There is 1 vote from the first source.');
-    $this->assertEquals(count($votes_from_source_2), 2, 'There are 2 votes from the second source.');
+    $this->assertCount(1, $votes_from_source_1, 'There is 1 vote from the first source.');
+    $this->assertCount(2, $votes_from_source_2, 'There are 2 votes from the second source.');
 
     // Delete the votes from source_2 and repeat the test.
     $vote_storage->deleteUserVotes(0, 'vote', 'node', 1, 'source_2');
     $votes_from_source_1 = $vote_storage->getUserVotes(0, 'vote', 'node', 1, 'source_1');
     $votes_from_source_2 = $vote_storage->getUserVotes(0, 'vote', 'node', 1, 'source_2');
-    $this->assertEquals(count($votes_from_source_1), 1, 'There is still 1 vote from the first source.');
-    $this->assertEquals(count($votes_from_source_2), 0, 'There are now 0 votes from the second source.');
+    $this->assertCount(1, $votes_from_source_1, 'There is still 1 vote from the first source.');
+    $this->assertCount(0, $votes_from_source_2, 'There are now 0 votes from the second source.');
   }
 
 }
