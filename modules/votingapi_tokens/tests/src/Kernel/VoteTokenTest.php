@@ -47,9 +47,6 @@ class VoteTokenTest extends KernelTestBase {
   protected function setUp() {
     parent::setUp();
 
-    if (\Drupal::entityTypeManager()->hasDefinition('path_alias')) {
-      $this->installEntitySchema('path_alias');
-    }
     \Drupal::service('router.builder')->rebuild();
     $this->installConfig(['system']);
 
@@ -71,7 +68,6 @@ class VoteTokenTest extends KernelTestBase {
       'type' => 'page',
       'title' => 'Source Title',
       'revision_log' => $this->randomMachineName(),
-      'path' => ['alias' => '/content/source-node'],
     ]);
     $this->node->save();
   }
