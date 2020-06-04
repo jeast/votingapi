@@ -21,14 +21,11 @@ class VoteTokenTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'path',
     'token',
     'system',
     'user',
     'node',
     'field',
-    'field',
-    'filter',
     'text',
     'votingapi',
     'votingapi_tokens',
