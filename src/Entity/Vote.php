@@ -233,35 +233,31 @@ class Vote extends ContentEntityBase implements VoteInterface {
    *
    * @see ::baseFieldDefinitions()
    *
-   * @return array
-   *   An array of default values.
+   * @return int
+   *   The user ID of the user who submitted the vote.
    */
   public static function getCurrentUserId() {
     return \Drupal::currentUser()->id();
   }
 
   /**
-   * Default value callback for 'user' base field definition.
+   * Default value callback for 'vote_source' base field definition.
    *
    * @see ::baseFieldDefinitions()
    *
-   * @return array
-   *   An array of default values.
+   * @return string
+   *   The IP address hash from the user who submitted the vote.
    */
   public static function getCurrentIp() {
     return hash('sha256', serialize(\Drupal::request()->getClientIp()));
   }
 
   /**
-   * Update voting results when a new vote is cast.
-   *
-   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
-   * @param bool|true $update
+   * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
-    if (\Drupal::config('votingapi.settings')
-      ->get('calculation_schedule') == 'immediate'
-    ) {
+    if (\Drupal::config('votingapi.settings')->get('calculation_schedule') == 'immediate') {
+      // Update voting results when a new vote is cast.
       \Drupal::service('plugin.manager.votingapi.resultfunction')
         ->recalculateResults(
           $this->getVotedEntityType(),
@@ -274,14 +270,12 @@ class Vote extends ContentEntityBase implements VoteInterface {
   }
 
   /**
-   * If a vote is deleted, the results needs to be updated.
-   *
-   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
-   * @param array $entities
+   * {@inheritdoc}
    */
   public static function postDelete(EntityStorageInterface $storage, array $entities) {
     parent::postDelete($storage, $entities);
 
+    // If a vote is deleted, the results needs to be updated.
     foreach ($entities as $entity) {
       \Drupal::service('plugin.manager.votingapi.resultfunction')
         ->recalculateResults(
