@@ -10,6 +10,9 @@ use Drupal\votingapi\Entity\Vote;
  */
 class VoteStorage extends SqlContentEntityStorage implements VoteStorageInterface {
 
+  /**
+   * {@inheritdoc}
+   */
   public function getUserVotes($uid, $vote_type_id = NULL, $entity_type_id = NULL, $entity_id = NULL, $vote_source = NULL) {
     $query = \Drupal::entityQuery('vote')
       ->condition('user_id', $uid);
@@ -28,6 +31,9 @@ class VoteStorage extends SqlContentEntityStorage implements VoteStorageInterfac
     return $query->execute();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function deleteUserVotes($uid, $vote_type_id = NULL, $entity_type_id = NULL, $entity_id = NULL, $vote_source = NULL) {
     $votes = $this->getUserVotes($uid, $vote_type_id, $entity_type_id, $entity_id, $vote_source);
     if (!empty($votes)) {
@@ -49,6 +55,9 @@ class VoteStorage extends SqlContentEntityStorage implements VoteStorageInterfac
     return $vote_source;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getVotesSinceMoment() {
     $last_cron = \Drupal::state()->get('votingapi.last_cron', 0);
     return \Drupal::entityQueryAggregate('vote')
@@ -59,6 +68,9 @@ class VoteStorage extends SqlContentEntityStorage implements VoteStorageInterfac
       ->execute();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function deleteVotesForDeletedEntity($entity_type_id, $entity_id) {
     $votes = \Drupal::entityQuery('vote')
       ->condition('entity_type', $entity_type_id)
