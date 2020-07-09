@@ -75,6 +75,9 @@ interface VoteInterface extends ContentEntityInterface, EntityOwnerInterface {
   /**
    * Sets the vote value type.
    *
+   * @param string $value_type
+   *   The vote value type.
+   *
    * @return $this
    */
   public function setValueType($value_type);
