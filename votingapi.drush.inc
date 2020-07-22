@@ -2,63 +2,87 @@
 
 /**
  * @file
+ * Voting API module integration with Drush 8 and earlier.
+ *
  * Generate votingapi votes, recalculate results for existing votes, or flush
- *  VotingAPI data entirely.
+ * Voting API data entirely.
  */
 
 use Drupal\votingapi\Entity\Vote;
 
 /**
- * Implements of hook_drush_help().
+ * Implements hook_drush_help().
  */
 function votingapi_drush_help($section) {
   switch ($section) {
+    case 'meta:voting:title':
+      return dt('Voting API commands');
+
+    case 'meta:voting:summary':
+      return dt('Drush commands for the Voting API module.');
+
     case 'drush:generate-votes':
-      return dt('Usage: drush generate-votes <entity_type> <vote_type>.');
+      return dt('Creates dummy voting data.');
 
     case 'drush:votingapi-recalculate':
-      return dt('Usage: drush votingapi-recalculate <entity_type>.');
+      return dt('Regenerates voting results from raw vote data.');
 
     case 'drush:votingapi-flush':
-      return dt('Usage: drush votingapi-flush <entity_type>.');
+      return dt('Deletes all existing voting data.');
   }
 }
 
 /**
- * Implements of hook_drush_command().
+ * Implements hook_drush_command().
  */
 function votingapi_drush_command() {
   $items['generate-votes'] = [
-    'description' => 'Creates dummy voting data.',
+    'aliases' => ['genv'],
+    'description' => dt('Creates dummy voting data.'),
+    'drupal dependencies' => ['votingapi'],
+    'core' => ['8+'],
     'arguments' => [
       'entity_type' => 'The type of entity to generate votes for.',
-      'vote_type' => 'The type of votes to generate, defaults to \'percent\'.',
+      'vote_type' => "The type of votes to generate, defaults to 'percent'.",
     ],
     'options' => [
-      'kill_votes' => 'Specify \'kill_votes\' to delete all existing votes before generating new ones.',
+      'kill_votes' => "Specify 'kill_votes' to delete all existing votes before generating new ones.",
       'age' => 'The maximum age, in seconds, of each vote.',
-      'node_types' => 'A comma delimited list of node types to generate votes for, if the entity type is \'node\'.',
+      'node_types' => "A comma delimited list of node types to generate votes for, if the entity type is 'node'.",
     ],
-    'aliases' => ['genv'],
+    'examples' => [
+      'drush generate-votes [entity_type] [vote_type].' => dt('Creates dummy voting data.'),
+    ],
   ];
   $items['votingapi-recalculate'] = [
-    'description' => 'Regenerates voting results from raw vote data.',
-  // Various D7 code assumes we have a uid.
+    'aliases' => ['vcalc'],
+    'description' => dt('Regenerates voting results from raw vote data.'),
+    'drupal dependencies' => ['votingapi'],
+    'core' => ['8+'],
+    // Various D7 code assumes we have a uid.
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
     'arguments' => [
       'entity_type' => 'The type of entity to recalculate vote results for.',
     ],
-    'aliases' => ['vcalc'],
+    'examples' => [
+      'drush votingapi-recalculate [entity_type]' => dt('Regenerates voting results from raw vote data.'),
+    ],
   ];
   $items['votingapi-flush'] = [
-    'description' => 'Deletes all existing voting data.',
-  // Various D7 code assumes we have a uid.
+    'aliases' => ['vflush'],
+    'description' => dt('Deletes all existing voting data.'),
+    'drupal dependencies' => ['votingapi'],
+    'core' => ['8+'],
+    // Various D7 code assumes we have a uid.
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
     'arguments' => [
       'entity_type' => 'The type of entity whose voting data should be flushed.',
     ],
-    'aliases' => ['vflush'],
+    'examples' => [
+      'drush votingapi-flush [entity_type]' => dt('Deletes all existing voting data.'),
+    ],
   ];
+
   return $items;
 }
 
@@ -74,7 +98,7 @@ function drush_votingapi_generate_votes($entity_type = 'node', $vote_type = 'per
 
   votingapi_generate_votes($entity_type, $vote_type, $options);
 
-  drush_log(dt('Generating @vtype votes for @etype entities.', ['@vtype' => $vote_type, '@etype' => $entity_type]), 'success');
+  drush_log(dt('Generated @vtype votes for @etype entities.', ['@vtype' => $vote_type, '@etype' => $entity_type]), 'success');
 }
 
 /**
@@ -87,12 +111,12 @@ function votingapi_generate_votes($entity_type = 'node', $vote_type = 'percent',
     'kill_votes' => FALSE,
   ];
   if (!empty($options['kill_votes'])) {
-    $cache = \Drupal::database()->delete('votingapi_result');
-    $votes = \Drupal::database()->delete('votingapi_vote');
-    $cache->condition('entity_type', $entity_type);
-    $votes->condition('entity_type', $entity_type);
-    $cache->execute();
-    $votes->execute();
+    $cache = \Drupal::database()->delete('votingapi_result')
+      ->condition('entity_type', $entity_type)
+      ->execute();
+    $votes = \Drupal::database()->delete('votingapi_vote')
+      ->condition('entity_type', $entity_type)
+      ->execute();
   }
   $uids = \Drupal::entityQuery('user')
     ->condition('status', 1)
@@ -111,13 +135,13 @@ function votingapi_generate_votes($entity_type = 'node', $vote_type = 'percent',
 /**
  * Utility function to generate votes on a node by a set of users.
  */
-function _votingapi_cast_votes($eType, $eId, $timestamp = 0, $uids = [], $style = 'percent') {
+function _votingapi_cast_votes($entity_type, $entity_id, $timestamp = 0, array $uids = [], $style = 'percent') {
   foreach ($uids as $uid) {
     $request_time = \Drupal::time()->getRequestTime();
     $value = $style === 'points' ? rand(0, 1) ? 1 : -1 : mt_rand(1, 5) * 20;
     $vote = Vote::create(['type' => 'vote']);
-    $vote->setVotedEntityId($eId);
-    $vote->setVotedEntityType($eType);
+    $vote->setVotedEntityId($entity_id);
+    $vote->setVotedEntityType($entity_type);
     $vote->setOwnerId($uid);
     $vote->setCreatedTime($request_time - mt_rand(0, $timestamp));
     $vote->setValueType($style);
