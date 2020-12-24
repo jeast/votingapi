@@ -87,7 +87,7 @@ class VoteDeletionTest extends BrowserTestBase {
     $label = $this->node->label();
 
     // Delete a vote.
-    $this->drupalGet('/admin/vote/' . reset($vote_id) . '/delete');
+    $this->drupalGet('admin/vote/' . reset($vote_id) . '/delete');
     $session->pageTextContains(
       t('You are about to delete a vote by @user on @entity-type @label. This action cannot be undone.', [
         '@user' => $vote_owner,
