@@ -15,20 +15,13 @@ class VoteMigrationTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = [
-    'votingapi',
-  ];
+  protected static $modules = ['votingapi'];
 
   /**
    * {@inheritdoc}
    */
   protected function getFixtureFilePath() {
-    return implode(DIRECTORY_SEPARATOR, [
-      drupal_get_path('module', 'votingapi'),
-      'tests',
-      'fixtures',
-      'drupal7.php',
-    ]);
+    return __DIR__ . '/../../../fixtures/drupal7.php';
   }
 
   /**
