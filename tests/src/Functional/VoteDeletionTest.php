@@ -79,6 +79,7 @@ class VoteDeletionTest extends BrowserTestBase {
     // Get vote id.
     $vote_id = \Drupal::entityQuery('vote')
       ->condition('vote_source', 'source_1')
+      ->accessCheck(TRUE)
       ->execute();
 
     $vote = $vote_storage->load(reset($vote_id));
