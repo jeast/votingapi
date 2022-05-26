@@ -30,7 +30,8 @@ class VoteMigrationTest extends MigrateDrupal7TestBase {
   public function testVoteMigration() {
     $this->installEntitySchema('vote');
     // This demonstrates that only comments belonging to articles are migrated.
-    $this->executeMigrations(['d7_vote:comment:article']);
+    // d7_vote_type migration needs to be executed before any d7_vote migration.
+    $this->executeMigrations(['d7_vote_type', 'd7_vote:comment:article']);
     $storage = \Drupal::entityTypeManager()->getStorage('vote');
     assert($storage instanceof EntityStorageInterface);
     $votes = $storage->loadMultiple();
@@ -60,6 +61,19 @@ class VoteMigrationTest extends MigrateDrupal7TestBase {
     assert($storage instanceof EntityStorageInterface);
     $votes = $storage->loadMultiple();
     $this->assertCount(10, $votes);
+  }
+
+  /**
+   * Tests Vote Type migration.
+   */
+  public function testVoteTypeMigration() {
+    $vote_types_before_migration = \Drupal::entityTypeManager()->getStorage('vote_type');
+    $vote_type_before = $vote_types_before_migration->loadMultiple();
+    $this->assertCount(0, $vote_type_before);
+    $this->executeMigrations(['d7_vote_type']);
+    $vote_types_after_migration = \Drupal::entityTypeManager()->getStorage('vote_type');
+    $vote_type_after = $vote_types_after_migration->loadMultiple();
+    $this->assertCount(1, $vote_type_after);
   }
 
 }

@@ -76,7 +76,7 @@ class VotingApiDeriver extends DeriverBase {
               $bundle,
             ]);
             $derivative_definition = $base_plugin_definition;
-            $derivative_definition['migration_dependencies']['required'] = ['d7_' . $entity_type . ':' . $bundle];
+            $derivative_definition['migration_dependencies']['required'][] = 'd7_' . $entity_type . ':' . $bundle;
             $derivative_definition['source']['entity_type'] = $entity_type;
             $derivative_definition['source']['bundle'] = $bundle;
             $this->derivatives[$derivative_id] = $derivative_definition;

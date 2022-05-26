@@ -11,7 +11,11 @@ source:
 
 process:
   vote_id: vote_id
-  type: tag
+  type:
+    - plugin: migration_lookup
+      migration: d7_vote_type
+      no_stub: TRUE
+      source: tag
   entity_type: entity_type
   entity_id: entity_id
   value: value
@@ -23,3 +27,6 @@ process:
 destination:
   plugin: entity:vote
   default_bundle: vote
+migration_dependencies:
+  required:
+    - d7_vote_type
