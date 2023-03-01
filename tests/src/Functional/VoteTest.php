@@ -24,7 +24,7 @@ class VoteTest extends BrowserTestBase {
   /**
    * Tests casting a vote on an entity.
    */
-  public function testVotes() {
+  public function testVotes(): void {
     $vote_query = \Drupal::entityQuery('vote');
     $vote_storage = $this->container->get('entity_type.manager')->getStorage('vote');
     $node = $this->drupalCreateNode(['type' => 'article']);
@@ -85,7 +85,7 @@ class VoteTest extends BrowserTestBase {
   /**
    * Test vote results.
    */
-  public function testVoteResults() {
+  public function testVoteResults(): void {
     $vote_storage = $this->container->get('entity_type.manager')->getStorage('vote');
     $node = $this->drupalCreateNode();
     $user = $this->drupalCreateUser();
@@ -136,7 +136,7 @@ class VoteTest extends BrowserTestBase {
   /**
    * Test voting by anonymous users.
    */
-  public function testAnonymousVoting() {
+  public function testAnonymousVoting(): void {
     $vote_storage = $this->container->get('entity_type.manager')->getStorage('vote');
     $node = $this->drupalCreateNode();
 

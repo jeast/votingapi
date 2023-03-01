@@ -54,7 +54,7 @@ class VoteDeletionTest extends BrowserTestBase {
   /**
    * Tests deleting a vote.
    */
-  public function testVoteDeletion() {
+  public function testVoteDeletion(): void {
     $session = $this->assertSession();
     $vote_storage = $this->container->get('entity_type.manager')->getStorage('vote');
 

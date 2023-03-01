@@ -20,14 +20,14 @@ class VoteMigrationTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getFixtureFilePath() {
+  protected function getFixtureFilePath(): string {
     return __DIR__ . '/../../../fixtures/drupal7.php';
   }
 
   /**
    * Tests migration.
    */
-  public function testVoteMigration() {
+  public function testVoteMigration(): void {
     $this->installEntitySchema('vote');
     // This demonstrates that only comments belonging to articles are migrated.
     // d7_vote_type migration needs to be executed before any d7_vote migration.
@@ -66,7 +66,7 @@ class VoteMigrationTest extends MigrateDrupal7TestBase {
   /**
    * Tests Vote Type migration.
    */
-  public function testVoteTypeMigration() {
+  public function testVoteTypeMigration(): void {
     $vote_types_before_migration = \Drupal::entityTypeManager()->getStorage('vote_type');
     $vote_type_before = $vote_types_before_migration->loadMultiple();
     $this->assertCount(0, $vote_type_before);
