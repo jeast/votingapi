@@ -157,6 +157,7 @@ class VotingApiCommands extends DrushCommands {
         ->execute();
     }
     $uids = \Drupal::entityQuery('user')
+      ->accessCheck(TRUE)
       ->condition('status', 1)
       ->execute();
     $query = \Drupal::database()->select($entity_type, 'e')
