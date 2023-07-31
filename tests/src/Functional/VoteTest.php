@@ -174,7 +174,7 @@ class VoteTest extends BrowserTestBase {
   /**
    * Test vote results storage method.
    */
-  public function testVoteResultsStorage() {
+  public function testVoteResultsStorage(): void {
     $vote_storage = $this->container->get('entity_type.manager')->getStorage('vote');
     $node = $this->drupalCreateNode();
     $user = $this->drupalCreateUser();
