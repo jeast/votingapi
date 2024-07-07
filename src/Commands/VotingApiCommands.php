@@ -2,6 +2,8 @@
 
 namespace Drupal\votingapi\Commands;
 
+// cspell:ignore genv vcalc vflush vtype etype resultfunction
+
 use Drush\Commands\DrushCommands;
 use Drupal\votingapi\Entity\Vote;
 
