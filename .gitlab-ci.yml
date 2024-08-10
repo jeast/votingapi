@@ -50,7 +50,8 @@ include:
 #   SKIP_ESLINT: '1'
 
 variables:
-  _CSPELL_IGNORE_PATHS: '"phpcs.xml.dist", "tests/fixtures/*.php"'
+  _CSPELL_IGNORE_PATHS: '"phpcs.xml.dist", "tests/fixtures/*.php", "README.txt"'
+  _CSPELL_WORDS: 'resultfunction'
   _SHOW_ENVIRONMENT_VARIABLES: 1
   _PHPUNIT_CONCURRENT: 1
   OPT_IN_TEST_MIN_PHP: 1
