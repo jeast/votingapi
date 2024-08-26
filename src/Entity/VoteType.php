@@ -99,7 +99,7 @@ class VoteType extends ConfigEntityBundleBase implements VoteTypeInterface {
 
     // Clear the vote type cache to reflect the removal.
     $storage->resetCache(array_keys($entities));
-    // TODO: needed?
+    // @todo Is this needed?
   }
 
 }

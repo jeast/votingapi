@@ -176,7 +176,7 @@ class VoteResultFunctionManager extends DefaultPluginManager {
     // Give other modules a chance to act on the results of vote calculations.
     $this->moduleHandler->alter('votingapi_results', $vote_results, $entity_type_id, $entity_id);
 
-    foreach ($vote_results as $id => $vote_result) {
+    foreach ($vote_results as $vote_result) {
       if (!empty($vote_result)) {
         $this->database->insert('votingapi_result')->fields($vote_result)->execute();
       }

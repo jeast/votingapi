@@ -5,7 +5,6 @@ namespace Drupal\votingapi\Entity;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\user\UserInterface;
 use Drupal\votingapi\VoteResultInterface;
 
 /**
