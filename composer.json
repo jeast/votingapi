@@ -10,7 +10,7 @@
       "source": "https://git.drupalcode.org/project/votingapi"
     },
     "require-dev": {
-      "drupal/token": "^1.5"
+      "drupal/token": "^1.17"
     },
     "minimum-stability": "dev",
     "extra": {
